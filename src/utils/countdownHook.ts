@@ -18,6 +18,11 @@ export const useCountdown = (initialTime: number) => {
 			const minutes2 = minutes < 10 ? `0${minutes}` : minutes;
 			const seconds2 = seconds < 10 ? `0${seconds}` : seconds;
 			
+			// If the count down is finished, return 00:00:00:00
+			if (distance < 0) {
+				setRemaining("00 : 00 : 00 : 00");
+				return;
+			}
 			setRemaining(`${days2} : ${hours2} : ${minutes2} : ${seconds2}`)
 		}, 1000);
 

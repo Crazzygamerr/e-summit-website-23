@@ -7,10 +7,9 @@ body {
   background-color: #000000;
 }
 
-#next {
-	overflow-x: hidden;
+#__next {
+  overflow-x: hidden;
 }
-
 
 /* change the color of the scrollbar */
 ::-webkit-scrollbar {
@@ -21,7 +20,7 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #0085FF;
+  background: #0085ff;
   border-radius: 10px;
 }
 ::-webkit-scrollbar-track {
@@ -29,11 +28,11 @@ body {
 }
 
 .filepond--drop-label {
-	color: #ffffff;
+  color: #ffffff;
 }
 
 .filepond--panel-root {
-	background-color: #000000;
-	color: #ffffff;
-	border: 1px solid rgba(255, 255, 255, 0.5);
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }

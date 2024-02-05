@@ -1,24 +1,31 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider     = "mysql"
-  // NOTE: When using postgresql, mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-  // Further reading:
-  // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-  // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
   url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
-model Example {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum Role {
+  USER
+  ADMIN
+  HACKATHON
+  IDEATHON
+  STARTUPVERSE
+  ESUMMIT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum PaymentItemState {
+  PROCESSING
+  FAILED
+  APPROVED
 }
 
 // Necessary for Next auth
@@ -66,22 +73,25 @@ model User {
   // if this is false, pester the user to fill the form
   hasFilledInfo Boolean @default(false)
 
-  // make this true after scanning QR code at gate
-  arrivedOnsite Boolean @default(false)
+  checkedIn          Boolean @default(false)
+  registeredForEvent Boolean @default(false)
+  checkedOut         Boolean @default(false)
 
   university   String?
   fieldOfStudy String?
   yearOfStudy  String?
   mobileNumber String?
-  gender       Gender
-
-  Payment Payment[]
-
-  Team         Team[]
+  gender       Gender?
+  teamId       String?
+  team         Team?          @relation(fields: [teamId], references: [id])
   teamLeader   Boolean        @default(false)
   Accomodation Accomodation[]
   TravelItem   TravelItem[]
+  EventReg     EventReg[]
   PaymentItem  PaymentItem[]
+  UserPayment  UserPayment[]
+
+  @@index([teamId])
 }
 
 model VerificationToken {
@@ -93,16 +103,36 @@ model VerificationToken {
 }
 
 model EmailReg {
-  email String @unique
+  id    Int    @id @default(autoincrement())
+  email String
 }
 
 model Event {
-  id      String    @id @default(cuid())
+  id       String     @id @default(cuid())
   // event type either 2 day or 3 day enum
-  amount  Int
-  name    String
-  Payment Payment[]
-  Team    Team[]
+  amount   Int
+  name     String
+  Team     Team[]
+  EventReg EventReg[]
+}
+
+model EventReg {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+
+  paymentId String
+  payment   PaymentItem @relation(fields: [paymentId], references: [id])
+
+  quantity Int @default(1)
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([paymentId])
 }
 
 // create a payment model for paytm gateway
@@ -111,53 +141,61 @@ model PaymentItem {
   id String @id @default(cuid())
 
   userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   amount Int
 
-  state PaymentItemState
+  userPaymentId String
+  userPayment   UserPayment @relation(fields: [userPaymentId], references: [id])
 
-  User         User           @relation(fields: [userId], references: [id])
+  state        PaymentItemState
   Accomodation Accomodation[]
   TravelItem   TravelItem[]
+  EventReg     EventReg[]
+
+  @@index([userId])
+  @@index([userPaymentId])
 }
 
 // This is for the event payments ONLY 
-model Payment {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId   String
-  amount    Int
-  status    String
-  createdAt DateTime @default(now())
+
+model UserPayment {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  upi         String
+  url         String
+  PaymentItem PaymentItem[]
 
   @@index([userId])
-  @@index([eventId])
 }
 
 model Team {
   id      String @id @default(cuid())
   name    String
   event   Event  @relation(fields: [eventId], references: [id])
-  members User[]
   eventId String
+  User    User[]
 
   @@index([eventId])
 }
 
 model Travel {
   id         String       @id @default(cuid())
-  fromPlace  String
-  toPlace    String
+  pickUp     String
+  seater     Int
   amount     Int
-  date       DateTime
   travelItem TravelItem[]
 }
 
 model TravelItem {
-  id       String @id @default(cuid())
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   String
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
   travel   Travel @relation(fields: [travelId], references: [id], onDelete: Cascade)
   travelId String
 
@@ -166,6 +204,7 @@ model TravelItem {
 
   @@index([userId])
   @@index([travelId])
+  @@index([paymentItemId])
 }
 
 model Cluster {
@@ -188,30 +227,15 @@ model Accomodation {
   checkedIn  Boolean @default(false)
   checkedOut Boolean @default(false)
 
-  user   User   @relation(fields: [userId], references: [id])
+  payment   PaymentItem @relation(fields: [paymentId], references: [id])
+  paymentId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  payment       PaymentItem @relation(fields: [paymentItemId], references: [id])
-  paymentItemId String
-
   @@index([clusterId])
+  @@index([paymentId])
   @@index([userId])
 }
 
 // Role user or admin
-enum Role {
-  USER
-  ADMIN
-}
-
-enum Gender {
-  MALE
-  FEMALE
-}
-
-enum PaymentItemState {
-  NOT_REG
-  PROCESSING
-  FAILED
-  APPROVED
-}

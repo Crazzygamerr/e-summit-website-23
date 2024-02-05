@@ -1,23 +1,21 @@
 import { type NextPage } from "next";
 import { useSession } from "next-auth/react";
 
-import { useForm, SubmitHandler } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 
 import { type GetServerSidePropsContext } from "next";
 
 import { prisma } from "../server/db/client";
 
-import { authOptions } from "../pages/api/auth/[...nextauth]";
 import { unstable_getServerSession } from "next-auth/next";
+import { authOptions } from "../pages/api/auth/[...nextauth]";
 
 import {
+  Button,
   FormControl,
-  FormLabel,
-  FormErrorMessage,
   FormHelperText,
   Input,
   Select,
-  Button,
   useToast,
 } from "@chakra-ui/react";
 
@@ -36,12 +34,10 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const email = session.user?.email;
     const user = await prisma.user.findFirst({ where: { email } });
 
-    console.log({ user }, "has visited the init form");
-
     if (user?.hasFilledInfo) {
       return {
         redirect: {
-          destination: "/dashboard",
+          destination: "/",
           permanent: false,
         },
       };
@@ -57,15 +53,15 @@ interface InitFormInputs {
   university: string;
   fieldOfStudy: string;
   yearOfStudy: string;
-	mobileNumber: string;
-	gender: "MALE" | "FEMALE";
+  mobileNumber: string;
+  gender: "MALE" | "FEMALE";
 }
 
 const InitialForm: NextPage = () => {
   const { data: sessionData } = useSession();
+  const isSNU = sessionData?.user?.email?.endsWith("snu.edu.in");
 
   const toast = useToast();
-
   const mutation = trpc.reg.fillUserInfo.useMutation();
 
   const {
@@ -75,7 +71,6 @@ const InitialForm: NextPage = () => {
   } = useForm<InitFormInputs>();
 
   const onSubmit: SubmitHandler<InitFormInputs> = (data) => {
-    console.log(data);
     mutation.mutate(data);
 
     if (mutation.isError) {
@@ -94,13 +89,14 @@ const InitialForm: NextPage = () => {
         duration: 5000,
         isClosable: true,
       });
+      setTimeout(() => (window.location.href = "/"), 1000);
     }
   };
 
   return sessionData ? (
     <div className="mx-auto flex w-[40vw] flex-col items-start phone:w-[90vw]">
       <div>
-        <div className="mt-10 text-5xl phone:text-4xl">
+        <div className="mt-24 text-5xl phone:text-4xl">
           Welcome, {sessionData.user?.name?.split(" ")[0]}.
         </div>
         <div className="text-sm laptop:text-base">
@@ -113,7 +109,9 @@ const InitialForm: NextPage = () => {
           className="mt-5 w-[80%]"
           variant="flushed"
           placeholder="University"
-          {...register("university", { required: true })}
+          {...register("university", {
+            required: true,
+          })}
         />
         {errors.university && (
           <FormHelperText color="red.400">
@@ -168,8 +166,8 @@ const InitialForm: NextPage = () => {
           <FormHelperText color="red.400">
             This field is required
           </FormHelperText>
-				)}
-				<Select
+        )}
+        <Select
           className="w-[80%]"
           marginTop="38px"
           variant="flushed"
@@ -181,6 +179,11 @@ const InitialForm: NextPage = () => {
           <option value="MALE">MALE</option>
           <option value="FEMALE">FEMALE</option>
         </Select>
+        {errors.gender && (
+          <FormHelperText color="red.400">
+            This field is required
+          </FormHelperText>
+        )}
         <Button
           mt={14}
           colorScheme="black"

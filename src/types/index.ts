@@ -7,7 +7,6 @@ type TravelItem = {
 
 export type CheckoutObject = {
   isAccommodation: boolean;
-  gender?: Gender;
   checkinDate?: Date;
   checkoutDate?: Date;
   travel: TravelItem[];

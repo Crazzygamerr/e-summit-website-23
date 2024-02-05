@@ -1,9 +1,13 @@
 import { z } from "zod";
 
-import { router, protectedProcedure, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 
-import { CheckoutObject } from "../../../types/index";
+import os from "os";
+import path from "path";
+import * as fs from "node:fs/promises";
+import OCR from "../../../lib/ocr";
+import mailWork from "../../../lib/mailwork";
 
 export const checkoutRouter = router({
   isSNU: publicProcedure.query(({ ctx }) => {
@@ -29,30 +33,102 @@ export const checkoutRouter = router({
     }
   }),
   handleInitialCheckout: protectedProcedure
-    // .input(
-    //   z.object({
-    //     isAccomodation: z.boolean().optional(),
-    //     checkinDate: z.date().optional(),
-    //     checkoutDate: z.date().optional(),
-    //     travel: z.object({
-    //       destination: z.string(),
-    //       departureDateAndTime: z.date(),
-    //     }).optional(),
-    //   })
-    // )
+    .input(
+      z.object({
+        isAccomodation: z.boolean().optional(),
+        checkinDate: z.date().optional(),
+        checkoutDate: z.date().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const isSNU = ctx.session.user.email?.endsWith("snu.edu.in");
 
       const { id: userId } = ctx.session.user;
+      const user = await ctx.prisma.user.findFirst({ where: { id: userId } });
+      if (!user) return;
 
-      // rewrite this to handle actual checkout (take in accomodation and travel info)
-      // also, make separate route for event checkout
-      const paymentItem = await ctx.prisma.paymentItem.create({
-        data: { state: "NOT_REG", amount: isSNU ? 600 : 800, userId },
+      const { isAccomodation, checkinDate, checkoutDate } = input;
+
+      const ssDir = path.join(os.homedir(), "screenshots");
+
+      const ssFilename = (await fs.readdir(ssDir))
+        .filter((ss) => ss.includes(userId))
+        .sort()
+        .reverse()[0];
+
+      const UPI = (await OCR(ssDir + "/" + ssFilename))[0];
+
+      const event = isSNU
+        ? await ctx.prisma.event.findFirst({ where: { name: "SNU-ESUMMIT" } })
+        : await ctx.prisma.event.findFirst({
+            where: { name: "NONSNU-ESUMMIT" },
+          });
+
+      const cluster = await ctx.prisma.cluster.findFirst({
+        where: {
+          gender: user.gender ?? "MALE",
+        },
       });
 
-      return {
-        paymentItemId: paymentItem.id,
-      };
+      if (!cluster || !event) return;
+
+      console.log({ UPI });
+      console.log(ssFilename);
+      console.log("eventName", event.name);
+      console.log("checkinDate", checkinDate);
+      console.log("checkoutDate", checkoutDate);
+
+      await ctx.prisma.$transaction(async (tx) => {
+        const userPayment = await tx.userPayment.create({
+          data: {
+            userId,
+            upi: UPI ? UPI : "Bruh",
+            url: ssFilename ? ssFilename : "bruh",
+          },
+        });
+
+        const eventPaymentItem = await tx.paymentItem.create({
+          data: {
+            userId,
+            userPaymentId: userPayment.id,
+            amount: event.amount,
+            state: "PROCESSING",
+          },
+        });
+
+        await tx.eventReg.create({
+          data: {
+            userId,
+            eventId: event.id,
+            paymentId: eventPaymentItem.id,
+          },
+        });
+
+        if (isAccomodation && checkinDate && checkoutDate) {
+          const days = checkoutDate.getDate() - checkinDate.getDate();
+          const accomodationAmount = 300 * days - (days - 1) * 50 - 1;
+
+          const accomodationPaymentItem = await tx.paymentItem.create({
+            data: {
+              userId,
+              userPaymentId: userPayment.id,
+              amount: accomodationAmount,
+              state: "PROCESSING",
+            },
+          });
+
+          await tx.accomodation.create({
+            data: {
+              checkInDate: checkinDate,
+              checkOutDate: checkoutDate,
+              clusterId: cluster.id,
+              paymentId: accomodationPaymentItem.id,
+              userId,
+            },
+          });
+        }
+      });
+
+      await mailWork(user.email as string, user.name as string, UPI as string);
     }),
 });
