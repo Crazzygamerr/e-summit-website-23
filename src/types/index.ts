@@ -1,16 +1,16 @@
 import { Gender } from "@prisma/client";
 
-type travelItem = {
+type TravelItem = {
   destination: string;
   departureDateAndTime: string;
 };
 
-export type checkoutObject = {
+export type CheckoutObject = {
   isAccommodation: boolean;
   gender?: Gender;
   checkinDate?: Date;
   checkoutDate?: Date;
-  travel: travelItem[];
+  travel: TravelItem[];
 };
 
 export enum Status {

@@ -16,7 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ title, children }) => {
         <title>
           {title
             ? `${title} | E-Summit Shiv Nadar University 2023`
-            : "E-Summit Nadar University 2023"}
+            : "E-Summit Shiv Nadar University 2023"}
         </title>
         <meta
           name="description"

@@ -10,3 +10,30 @@ body {
 #next {
 	overflow-x: hidden;
 }
+
+
+/* change the color of the scrollbar */
+::-webkit-scrollbar {
+  background: transparent;
+}
+::-webkit-scrollbar {
+  width: 4px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #0085FF;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filepond--drop-label {
+	color: #ffffff;
+}
+
+.filepond--panel-root {
+	background-color: #000000;
+	color: #ffffff;
+	border: 1px solid rgba(255, 255, 255, 0.5);
+}

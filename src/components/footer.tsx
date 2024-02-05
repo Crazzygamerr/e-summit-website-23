@@ -1,4 +1,3 @@
-import { Flex, Text } from "@chakra-ui/react";
 import Image from "next/image";
 import Link from "next/link";
 import { Envelope, InstagramLogo, LinkedinLogo } from "phosphor-react";
@@ -10,22 +9,22 @@ const Footer: React.FC = () => {
         <Image className="-m-7" draggable={false} alt="" src={logo} />
         <div className="flex w-full flex-col justify-between gap-5 md:flex-row">
           <div className="flex flex-col gap-5">
-            <Flex align="center" justify="space-between">
-              <Text pr="1rem">FOLLOW US</Text>
+            <div className="flex items-center justify-start gap-8">
+              <p className="text-1">FOLLOW US</p>
               <Link href="https://www.instagram.com/esummit.snu/">
-                <InstagramLogo size={32} />
+                <InstagramLogo size={50} />
               </Link>
               <Link href="https://www.linkedin.com/company/esummit-snu/">
-                <LinkedinLogo size={32} />
+                <LinkedinLogo size={50} />
               </Link>
               <Link href="esummit@snu.edu.in">
-                <Envelope size={32} />
+                <Envelope size={50} />
               </Link>
-            </Flex>
+            </div>
           </div>
           <div className="flex shrink-0 flex-col gap-5 whitespace-nowrap">
             <p className="text-white/50">Learn More About E-SUMMIT&#39;23</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-6">
               <a>BLOG</a>
               <a>ABOUT</a>
               <a>PRIVACY POLICY</a>

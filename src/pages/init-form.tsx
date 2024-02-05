@@ -57,7 +57,8 @@ interface InitFormInputs {
   university: string;
   fieldOfStudy: string;
   yearOfStudy: string;
-  mobileNumber: string;
+	mobileNumber: string;
+	gender: "MALE" | "FEMALE";
 }
 
 const InitialForm: NextPage = () => {
@@ -167,7 +168,19 @@ const InitialForm: NextPage = () => {
           <FormHelperText color="red.400">
             This field is required
           </FormHelperText>
-        )}
+				)}
+				<Select
+          className="w-[80%]"
+          marginTop="38px"
+          variant="flushed"
+          placeholder="Gender"
+          {...register("gender", {
+            required: true,
+          })}
+        >
+          <option value="MALE">MALE</option>
+          <option value="FEMALE">FEMALE</option>
+        </Select>
         <Button
           mt={14}
           colorScheme="black"

@@ -31,6 +31,7 @@ export const regRouter = router({
         fieldOfStudy: z.string(),
         yearOfStudy: z.string().regex(new RegExp("^[0-9]{4}$")),
         mobileNumber: z.string(),
+        gender: z.enum(["MALE", "FEMALE"]),
       })
     )
     .mutation(async (req) => {

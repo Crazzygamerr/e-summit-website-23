@@ -13,7 +13,7 @@ const Countdown: React.FC<CountdownProps> = ({
 	
 	if (isLarge) {
 		return (
-			<h1 className="text-lg sm:text-6xl font-semibold">{time}</h1>
+			<h1 className="text-lg sm:text-4xl md:text-5xl lg:text-6xl font-semibold">{time}</h1>
 		);
 	} else {
 		return (
