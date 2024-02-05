@@ -282,7 +282,7 @@ const Home: NextPage = () => {
           alt=""
           src={redEllipse}
         />
-        {/* <div className="w-full overflow-hidden" ref={emblaRef}>
+        <div className="w-full overflow-hidden" ref={emblaRef}>
           <div className="embla__container flex h-[170px] items-center md:h-[400px]">
             {data.map((data_item, index) => (
               <a key={index} href={data_item[2]} rel="noreferrer">
@@ -317,7 +317,7 @@ const Home: NextPage = () => {
               }
             />
           ))}
-        </div> */}
+        </div>
       </div>
       {/* <div className="relative mx-auto  my-8 hidden h-fit w-3/4 rounded-3xl bg-gradient-to-r from-white to-white/0 p-[1px] sm:block">
           <div className="flex flex-col items-center rounded-3xl bg-black pt-5">
